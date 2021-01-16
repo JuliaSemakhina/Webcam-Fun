@@ -1,58 +1,101 @@
-let countdown;
-const timerDisplay = document.querySelector('.display__time-left');
-const endTime = document.querySelector('.display__end-time');
-const buttons = document.querySelectorAll('[data-time]');
+const video = document.querySelector('.player');
+const canvas = document.querySelector('.photo');
+const ctx = canvas.getContext('2d');
+const strip = document.querySelector('.strip');
+const snap = document.querySelector('.snap');
 
-function timer(seconds) {
-    //clear any timers
-    clearInterval(countdown);
+function getVideo(){
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false})
+    .then(localMediaStream => {
+      console.log(localMediaStream);
 
-    const now = Date.now();
-    const then = now + seconds * 1000;
-    displayTimeLeft(seconds);
-    displayEndTime(then);
+         video.srcObject = localMediaStream;
+        video.play();
+    })
+    .catch(err => {
+      console.error(`OH NO!!!`, err);
+    });
+   
+};
 
-    countdown = setInterval(() => {
-        const secondsLeft = Math.round((then - Date.now()) / 1000);
-        //check if we should stop it
-        if (secondsLeft < 0) {
-            clearInterval(countdown);
-            return;
-        }
 
-        //display it
-        displayTimeLeft(secondsLeft);
-    }, 1000);
+getVideo();
+
+function paintToCanvas(){
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.height = height;
+    canvas.width = width;
+
+    return setInterval(()=> {
+        ctx.drawImage(video, 0, 0, width, height);
+        let pixels = ctx.getImageData(0,0,width, height);
+        // pixels = redEffect(pixels);
+       
+        // pixels = rgbSplit(pixels);
+        //  ctx.globalAlpha = 0.1;
+        pixels = greenScreen(pixels);
+        ctx.putImageData(pixels, 0, 0);
+    }, 16);
 }
 
+function takePhoto(){
+    snap.curentTime = 0;
+    snap.play();
 
-function displayTimeLeft(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainderSeconds = seconds % 60;
-    const display = `${minutes} : ${remainderSeconds < 10 ? '0'+remainderSeconds : remainderSeconds }`;
-    document.title = display;
-    timerDisplay.textContent = display;
+    //take the data out of canvas
+    const data = canvas.toDataURL('image/jpeg');
+    const link = document.createElement('a');
+    link.href = data;
+    link.setAttribute('download', 'handsome');
+    link.innerHTML = `<img src="${data}" alt="Handsome" />`;
+    strip.insertBefore(link, strip.firstChild);
+
 }
 
-function displayEndTime(timestamp) {
-    const end = new Date(timestamp);
-    const hour = end.getHours();
-    const min = end.getMinutes();
-    const sec = end.getSeconds();
-
-    endTime.textContent = `Be Back At ${hour < 10 ? '0'+ hour : hour}: ${min < 10 ? '0' + min : min}: ${sec < 10 ? '0'+sec : sec}`;
+function redEffect(pixels) {
+  for (let i = 0; i < pixels.data.length; i+=4) {
+    pixels.data[i + 0] = pixels.data[i + 0] - 100; // RED
+    pixels.data[i + 1] = pixels.data[i + 1] - 50; // GREEN
+    pixels.data[i + 2] = pixels.data[i + 2] * 0.5; // Blue
+  }
+  return pixels;
 }
 
-function startTimer() {
-    timer(parseInt(this.dataset.time));
+function rgbSplit(pixels) {
+  for (let i = 0; i < pixels.data.length; i+=4) {
+    pixels.data[i - 150] = pixels.data[i + 0]; // RED
+    pixels.data[i + 500] = pixels.data[i + 1]; // GREEN
+    pixels.data[i - 550] = pixels.data[i + 2]; // Blue
+  }
+  return pixels;
 }
 
-buttons.forEach(button => button.addEventListener('click', startTimer));
+function greenScreen(pixels) {
+  const levels = {};
 
-document.customForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const mins = this.minutes.value;
-    console.log(mins);
-    timer(mins * 60);
-    this.reset();
-})
+  document.querySelectorAll('.rgb input').forEach((input) => {
+    levels[input.name] = input.value;
+  });
+
+  for (i = 0; i < pixels.data.length; i = i + 4) {
+    red = pixels.data[i + 0];
+    green = pixels.data[i + 1];
+    blue = pixels.data[i + 2];
+    alpha = pixels.data[i + 3];
+
+    if (red >= levels.rmin
+      && green >= levels.gmin
+      && blue >= levels.bmin
+      && red <= levels.rmax
+      && green <= levels.gmax
+      && blue <= levels.bmax) {
+      // take it out!
+      pixels.data[i + 3] = 0;
+    }
+  }
+
+  return pixels;
+}
+
+video.addEventListener('canplay', paintToCanvas);

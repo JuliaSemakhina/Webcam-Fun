@@ -5,28 +5,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Countdown Clock</title>
+    <title>Webcam Fun</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="timer">
-        <div class="timer__controls">
-            <button data-time="20" class="timer__button">20 Secs</button>
-            <button data-time="300" class="timer__button">Work 5</button>
-            <button data-time="900" class="timer__button">Quick 15</button>
-            <button data-time="1200" class="timer__button">Snack 20</button>
-            <button data-time="3600" class="timer__button">Lunch Break</button>
-            <form name="customForm" id="custom">
-                <input type="text" name="minutes" placeholder="Enter Minutes">
-            </form>
-        </div>
-        <div class="display">
-            <h1 class="display__time-left"></h1>
-            <p class="display__end-time"></p>
-        </div>
+     <div class="photobooth">
+    <div class="controls">
+      <button onClick="takePhoto()">Take Photo</button>
+      <div class="rgb">
+        <label for="rmin">Red Min:</label>
+        <input type="range" min=0 max=255 name="rmin">
+        <label for="rmax">Red Max:</label>
+        <input type="range" min=0 max=255 name="rmax">
+        <br>
+        <label for="gmin">Green Min:</label>
+        <input type="range" min=0 max=255 name="gmin">
+        <label for="gmax">Green Max:</label>
+        <input type="range" min=0 max=255 name="gmax">
+        <br>
+        <label for="bmin">Blue Min:</label>
+        <input type="range" min=0 max=255 name="bmin">
+        <label for="bmax">Blue Max:</label>
+        <input type="range" min=0 max=255 name="bmax">
+      </div>
     </div>
+
+    <canvas class="photo"></canvas>
+    <video class="player"></video>
+    <div class="strip"></div>
+  </div>
+
+  <audio class="snap" src="snap.mp3" hidden></audio>
     <script defer src="script.js"></script>
 </body>
 
